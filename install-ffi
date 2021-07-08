@@ -168,6 +168,7 @@ build_from_source() {
     else
         additional_flags="--no-default-features ${use_multicore_sdr} --features pairing${gpu_flags}"
     fi
+    additional_flags="--no-default-features"
 
     if [ -n "${__release_flags}" ]; then
         RUSTFLAGS="-C target-feature=${__release_flags}" ./scripts/build-release.sh "${__library_name}" "$(cat rust-toolchain)" "${additional_flags}"
