@@ -437,6 +437,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "ffi"
+version = "0.0.1"
+dependencies = [
+ "anyhow",
+ "bls-signatures",
+ "blstrs",
+ "byteorder",
+ "cbindgen",
+ "drop_struct_macro_derive",
+ "fff",
+ "ffi-toolkit",
+ "fil_logger",
+ "filepath",
+ "groupy",
+ "libc",
+ "log",
+ "rand 0.7.3",
+ "rand_chacha 0.2.2",
+ "rayon",
+ "rust-gpu-tools",
+ "serde_json",
+ "tempfile",
+]
+
+[[package]]
 name = "ffi-toolkit"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -485,31 +510,6 @@ dependencies = [
  "atty",
  "flexi_logger",
  "log",
-]
-
-[[package]]
-name = "filcrypto"
-version = "0.0.1"
-dependencies = [
- "anyhow",
- "bls-signatures",
- "blstrs",
- "byteorder",
- "cbindgen",
- "drop_struct_macro_derive",
- "fff",
- "ffi-toolkit",
- "fil_logger",
- "filepath",
- "groupy",
- "libc",
- "log",
- "rand 0.7.3",
- "rand_chacha 0.2.2",
- "rayon",
- "rust-gpu-tools",
- "serde_json",
- "tempfile",
 ]
 
 [[package]]

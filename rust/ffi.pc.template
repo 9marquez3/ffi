@@ -1,4 +1,4 @@
-Name: filcrypto
+Name: ffi
 Version: @VERSION@
 Description: C bindings for Filecoin Proofs
 Libs: @PRIVATE_LIBS@

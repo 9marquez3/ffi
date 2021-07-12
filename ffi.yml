@@ -6,17 +6,17 @@ GENERATOR:
   Options:
     SafeStrings: true
   Includes:
-    - ../filcrypto.h
+    - ../ffi.h
   FlagGroups:
     - {name: LDFLAGS, flags: ["-L${SRCDIR}/.."]}
-    - {name: pkg-config, flags: ["${SRCDIR}/../filcrypto.pc"]}
+    - {name: pkg-config, flags: ["${SRCDIR}/../ffi.pc"]}
 
 PARSER:
   Defines:
   IncludePaths:
     - ./headerstubs/
   SourcesPaths:
-    - ./filcrypto.h
+    - ./ffi.h
 
 TRANSLATOR:
   ConstCharIsString: true

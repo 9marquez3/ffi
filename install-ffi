@@ -17,7 +17,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 rust_sources_dir="rust"
 
 # an array of values passed as 'target-feature' to the Rust compiler if we're
-# building an optimized libfilcrypto (which takes advantage of some perf-boosting
+# building an optimized libffi (which takes advantage of some perf-boosting
 # instruction sets)
 #
 #optimized_release_rustc_target_features=$(jq -r '.[].rustc_target_feature' < "${rust_sources_dir}/rustc-target-features-optimized.json")
@@ -41,29 +41,29 @@ main() {
 
         # copy build assets into root of filecoin-ffi
         #
-        find -L "${__tmp_dir}" -type f -name filcrypto.h -exec cp -- "{}" . \;
-        find -L "${__tmp_dir}" -type f -name libfilcrypto.a -exec cp -- "{}" . \;
-        find -L "${__tmp_dir}" -type f -name filcrypto.pc -exec cp -- "{}" . \;
+        find -L "${__tmp_dir}" -type f -name ffi.h -exec cp -- "{}" . \;
+        find -L "${__tmp_dir}" -type f -name libffi.a -exec cp -- "{}" . \;
+        find -L "${__tmp_dir}" -type f -name ffi.pc -exec cp -- "{}" . \;
 
         check_installed_files
 
-        (>&2 echo "[install-filcrypto/main] successfully installed prebuilt libfilcrypto")
+        (>&2 echo "[install-ffi/main] successfully installed prebuilt libffi")
     else
-        (>&2 echo "[install-filcrypto/main] building libfilcrypto from local sources (dir = ${rust_sources_dir})")
+        (>&2 echo "[install-ffi/main] building libffi from local sources (dir = ${rust_sources_dir})")
 
-        # build libfilcrypto (and corresponding header and pkg-config)
+        # build libffi (and corresponding header and pkg-config)
         #
-        build_from_source "filcrypto" "${rust_sources_dir}" "${__release_flags}"
+        build_from_source "ffi" "${rust_sources_dir}" "${__release_flags}"
 
         # copy from Rust's build directory (target) to root of filecoin-ffi
         #
-        find -L "${rust_sources_dir}/target/release" -type f -name filcrypto.h -exec cp -- "{}" . \;
-        find -L "${rust_sources_dir}/target/release" -type f -name libfilcrypto.a -exec cp -- "{}" . \;
-        find -L "${rust_sources_dir}" -type f -name filcrypto.pc -exec cp -- "{}" . \;
+        find -L "${rust_sources_dir}/target/release" -type f -name ffi.h -exec cp -- "{}" . \;
+        find -L "${rust_sources_dir}/target/release" -type f -name libffi.a -exec cp -- "{}" . \;
+        find -L "${rust_sources_dir}" -type f -name ffi.pc -exec cp -- "{}" . \;
 
         check_installed_files
 
-        (>&2 echo "[install-filcrypto/main] successfully built and installed libfilcrypto from source")
+        (>&2 echo "[install-ffi/main] successfully built and installed libffi from source")
     fi
 }
 
@@ -227,18 +227,18 @@ get_release_flags() {
 }
 
 check_installed_files() {
-    if [[ ! -f "./filcrypto.h" ]]; then
-        (>&2 echo "[check_installed_files] failed to install filcrypto.h")
+    if [[ ! -f "./ffi.h" ]]; then
+        (>&2 echo "[check_installed_files] failed to install ffi.h")
         exit 1
     fi
 
-    if [[ ! -f "./libfilcrypto.a" ]]; then
-        (>&2 echo "[check_installed_files] failed to install libfilcrypto.a")
+    if [[ ! -f "./libffi.a" ]]; then
+        (>&2 echo "[check_installed_files] failed to install libffi.a")
         exit 1
     fi
 
-    if [[ ! -f "./filcrypto.pc" ]]; then
-        (>&2 echo "[check_installed_files] failed to install filcrypto.pc")
+    if [[ ! -f "./ffi.pc" ]]; then
+        (>&2 echo "[check_installed_files] failed to install ffi.pc")
         exit 1
     fi
 }

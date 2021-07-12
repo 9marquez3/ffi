@@ -2,9 +2,9 @@
 
 package ffi
 
-// #cgo LDFLAGS: ${SRCDIR}/libfilcrypto.a
-// #cgo pkg-config: ${SRCDIR}/filcrypto.pc
-// #include "./filcrypto.h"
+// #cgo LDFLAGS: ${SRCDIR}/libffi.a
+// #cgo pkg-config: ${SRCDIR}/ffi.pc
+// #include "./ffi.h"
 import "C"
 import (
 	"github.com/filecoin-project/filecoin-ffi/generated"

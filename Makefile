@@ -1,20 +1,20 @@
-DEPS:=filcrypto.h filcrypto.pc libfilcrypto.a
+DEPS:=ffi.h ffi.pc libffi.a
 
 all: $(DEPS)
 .PHONY: all
 
-# Create a file so that parallel make doesn't call `./install-filcrypto` for
+# Create a file so that parallel make doesn't call `./install-ffi` for
 # each of the deps
-$(DEPS): .install-filcrypto  ;
+$(DEPS): .install-ffi  ;
 
-.install-filcrypto: rust
+.install-ffi: rust
 	go clean -cache -testcache .
-	./install-filcrypto
+	./install-ffi
 	@touch $@
 
 clean:
 	go clean -cache -testcache .
-	rm -rf $(DEPS) .install-filcrypto
+	rm -rf $(DEPS) .install-ffi
 	rm -f ./runner
 	cd rust && cargo clean && cd ..
 .PHONY: clean
@@ -24,7 +24,7 @@ go-lint: $(DEPS)
 .PHONY: go-lint
 
 shellcheck:
-	shellcheck install-filcrypto
+	shellcheck install-ffi
 
 lint: shellcheck go-lint
 
@@ -33,7 +33,7 @@ cgo-leakdetect: runner
 .PHONY: cgo-leakdetect
 
 cgo-gen: $(DEPS)
-	go run github.com/xlab/c-for-go --nostamp filcrypto.yml
+	go run github.com/xlab/c-for-go --nostamp ffi.yml
 .PHONY: cgo-gen
 
 runner: $(DEPS)

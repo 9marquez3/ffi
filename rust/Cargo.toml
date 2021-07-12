@@ -1,5 +1,5 @@
 [package]
-name = "filcrypto"
+name = "ffi"
 description = "FFI Interface"
 version = "0.0.1"
 authors = [
