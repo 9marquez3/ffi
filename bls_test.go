@@ -40,8 +40,8 @@ func TestBLSSigningAndVerification(t *testing.T) {
 	barMessage := Message("hello bar!")
 
 	// calculate the digests of the messages
-	fooDigest := Hash(fooMessage)
-	barDigest := Hash(barMessage)
+	fooDigest := Hash(fooPublicKey,fooMessage)
+	barDigest := Hash(barPublicKey,barMessage)
 
 	// get the signature when signing the messages with the private keys
 	fooSignature := PrivateKeySign(fooPrivateKey, fooMessage)
@@ -70,10 +70,10 @@ func TestBLSSigningAndVerification(t *testing.T) {
 	assert.False(t, Verify(barSignature, []Digest{fooDigest}, []PublicKey{barPublicKey}))
 	assert.False(t, Verify(fooSignature, []Digest{barDigest}, []PublicKey{fooPublicKey}))
 
-	//assert the foo and bar message was signed with the foo and bar key
+	// assert the foo and bar message was signed with the foo and bar key
 	assert.True(t, HashVerify(aggregateSign, []Message{fooMessage, barMessage}, []PublicKey{fooPublicKey, barPublicKey}))
 
-	//assert the bar and foo message was not signed by the foo and bar key
+	// assert the bar and foo message was not signed by the foo and bar key
 	assert.False(t, HashVerify(aggregateSign, []Message{fooMessage, barMessage}, []PublicKey{fooPublicKey}))
 }
 
@@ -81,12 +81,13 @@ func BenchmarkBLSVerify(b *testing.B) {
 	priv := PrivateKeyGenerate()
 
 	msg := Message("this is a message that i will be signing")
-	digest := Hash(msg)
 
 	sig := PrivateKeySign(priv, msg)
 	// fmt.Println("SIG SIZE: ", len(sig))
 	// fmt.Println("SIG: ", sig)
 	pubk := PrivateKeyPublicKey(priv)
+
+	digest := Hash(pubk, msg)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -127,12 +128,12 @@ func benchmarkBLSVerifyBatchSize(size int) func(b *testing.B) {
 		for i := 0; i < size; i++ {
 			msg := Message(fmt.Sprintf("cats cats cats cats %d %d %d dogs", i, i, i))
 			msgs = append(msgs, msg)
-			digests = append(digests, Hash(msg))
 			priv := PrivateKeyGenerate()
 			sig := PrivateKeySign(priv, msg)
 			sigs = append(sigs, *sig)
 			pubk := PrivateKeyPublicKey(priv)
 			pubks = append(pubks, pubk)
+			digests = append(digests, Hash(pubk, msg))
 		}
 
 		t := time.Now()
@@ -160,7 +161,7 @@ func BenchmarkBLSHashAndVerify(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		digest := Hash(msg)
+		digest := Hash(pubk, msg)
 		if !Verify(sig, []Digest{digest}, []PublicKey{pubk}) {
 			b.Fatal("failed to verify")
 		}

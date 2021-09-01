@@ -1,153 +1,120 @@
-//+build cgo
-
 package ffi
 
-// #cgo LDFLAGS: ${SRCDIR}/libffi.a
-// #cgo pkg-config: ${SRCDIR}/ffi.pc
-// #include "./ffi.h"
-import "C"
 import (
-	"github.com/filecoin-project/filecoin-ffi/generated"
+	bls "github.com/cnc-project/cnc-bls"
 )
 
 // Hash computes the digest of a message
-func Hash(message Message) Digest {
-	resp := generated.FilHash(message, uint(len(message)))
-	resp.Deref()
-	resp.Digest.Deref()
-
-	defer generated.FilDestroyHashResponse(resp)
+func Hash(publicKey PublicKey, message Message) Digest {
+	pk, _ := bls.NewPublicKey(publicKey[:])
+	// HashToCurve
+	digest := (&bls.AugSchemeMPL{}).HashToCurve(pk, message)
 
 	var out Digest
-	copy(out[:], resp.Digest.Inner[:])
+	copy(out[:], digest)
 	return out
 }
 
 // Verify verifies that a signature is the aggregated signature of digests - pubkeys
 func Verify(signature *Signature, digests []Digest, publicKeys []PublicKey) bool {
-	// prep data
-	flattenedDigests := make([]byte, DigestBytes*len(digests))
-	for idx, digest := range digests {
-		copy(flattenedDigests[(DigestBytes*idx):(DigestBytes*(1+idx))], digest[:])
+	// type to [][]byte
+	dgs := make([][]byte, len(digests))
+	for i, _ := range digests {
+		dgs[i] = digests[i][:]
 	}
 
-	flattenedPublicKeys := make([]byte, PublicKeyBytes*len(publicKeys))
-	for idx, publicKey := range publicKeys {
-		copy(flattenedPublicKeys[(PublicKeyBytes*idx):(PublicKeyBytes*(1+idx))], publicKey[:])
+	pks := make([][]byte, len(publicKeys))
+	for i, _ := range publicKeys {
+		pks[i] =  publicKeys[i][:]
 	}
-
-	isValid := generated.FilVerify(signature[:], flattenedDigests, uint(len(flattenedDigests)), flattenedPublicKeys, uint(len(flattenedPublicKeys)))
-
-	return isValid > 0
+	return (&bls.AugSchemeMPL{}).AggregateHashVerify(pks, dgs, signature[:])
 }
 
 // HashVerify verifies that a signature is the aggregated signature of hashed messages.
 func HashVerify(signature *Signature, messages []Message, publicKeys []PublicKey) bool {
-	var flattenedMessages []byte
-	messagesSizes := make([]uint, len(messages))
-	for idx := range messages {
-		flattenedMessages = append(flattenedMessages, messages[idx]...)
-		messagesSizes[idx] = uint(len(messages[idx]))
+	// type to [][]byte
+	msgs := make([][]byte, len(messages))
+	for i, _ := range messages {
+		msgs[i] = messages[i][:]
 	}
 
-	flattenedPublicKeys := make([]byte, PublicKeyBytes*len(publicKeys))
-	for idx, publicKey := range publicKeys {
-		copy(flattenedPublicKeys[(PublicKeyBytes*idx):(PublicKeyBytes*(1+idx))], publicKey[:])
+	pks := make([][]byte, len(publicKeys))
+	for i, _ := range publicKeys {
+		pks[i] = publicKeys[i][:]
 	}
-
-	isValid := generated.FilHashVerify(signature[:], flattenedMessages, uint(len(flattenedMessages)), messagesSizes, uint(len(messagesSizes)), flattenedPublicKeys, uint(len(flattenedPublicKeys)))
-
-	return isValid > 0
+	return (&bls.AugSchemeMPL{}).AggregateVerify(pks, msgs, signature[:])
 }
 
 // Aggregate aggregates signatures together into a new signature. If the
 // provided signatures cannot be aggregated (due to invalid input or an
 // an operational error), Aggregate will return nil.
 func Aggregate(signatures []Signature) *Signature {
-	// prep data
-	flattenedSignatures := make([]byte, SignatureBytes*len(signatures))
-	for idx, sig := range signatures {
-		copy(flattenedSignatures[(SignatureBytes*idx):(SignatureBytes*(1+idx))], sig[:])
+	if len(signatures) == 1 {
+		return &signatures[0]
 	}
 
-	resp := generated.FilAggregate(flattenedSignatures, uint(len(flattenedSignatures)))
-	if resp == nil {
+	// type to [][]byte
+	ss := make([][]byte, len(signatures))
+	for i, _ := range signatures {
+		ss[i] = signatures[i][:]
+	}
+
+	aggrs, err := (&bls.AugSchemeMPL{}).Aggregate(ss...)
+	if err != nil {
 		return nil
 	}
 
-	defer generated.FilDestroyAggregateResponse(resp)
-
-	resp.Deref()
-	resp.Signature.Deref()
-
 	var out Signature
-	copy(out[:], resp.Signature.Inner[:])
+	copy(out[:], aggrs)
 	return &out
 }
 
 // PrivateKeyGenerate generates a private key
 func PrivateKeyGenerate() PrivateKey {
-	resp := generated.FilPrivateKeyGenerate()
-	resp.Deref()
-	resp.PrivateKey.Deref()
-	defer generated.FilDestroyPrivateKeyGenerateResponse(resp)
+	entropy, _ := bls.NewEntropy()
+	mnemonic, _ := bls.NewMnemonic(entropy)
+	seed := bls.NewSeed(mnemonic, "")
+	pk := bls.KeyGen(seed[:])
 
 	var out PrivateKey
-	copy(out[:], resp.PrivateKey.Inner[:])
+	copy(out[:], pk.Bytes())
 	return out
 }
 
-// PrivateKeyGenerate generates a private key in a predictable manner
+// PrivateKeyGenerateWithSeed generates a private key in a predictable manner
 func PrivateKeyGenerateWithSeed(seed PrivateKeyGenSeed) PrivateKey {
-	var ary generated.Fil32ByteArray
-	copy(ary.Inner[:], seed[:])
-
-	resp := generated.FilPrivateKeyGenerateWithSeed(ary)
-	resp.Deref()
-	resp.PrivateKey.Deref()
-	defer generated.FilDestroyPrivateKeyGenerateResponse(resp)
-
+	pk := bls.KeyGen(seed[:])
 	var out PrivateKey
-	copy(out[:], resp.PrivateKey.Inner[:])
+	copy(out[:], pk.Bytes())
 	return out
 }
 
 // PrivateKeySign signs a message
 func PrivateKeySign(privateKey PrivateKey, message Message) *Signature {
-	resp := generated.FilPrivateKeySign(privateKey[:], message, uint(len(message)))
-	resp.Deref()
-	resp.Signature.Deref()
 
-	defer generated.FilDestroyPrivateKeySignResponse(resp)
+	pk := bls.KeyFromBytes(privateKey[:])
+	sign := (&bls.AugSchemeMPL{}).Sign(pk, message)
 
 	var signature Signature
-	copy(signature[:], resp.Signature.Inner[:])
+	copy(signature[:], sign)
 	return &signature
 }
 
 // PrivateKeyPublicKey gets the public key for a private key
 func PrivateKeyPublicKey(privateKey PrivateKey) PublicKey {
-	resp := generated.FilPrivateKeyPublicKey(privateKey[:])
-	resp.Deref()
-	resp.PublicKey.Deref()
 
-	defer generated.FilDestroyPrivateKeyPublicKeyResponse(resp)
+	pubK := bls.KeyFromBytes(privateKey[:]).GetPublicKey()
 
 	var publicKey PublicKey
-	copy(publicKey[:], resp.PublicKey.Inner[:])
+	copy(publicKey[:], pubK.Bytes())
 	return publicKey
 }
 
 // CreateZeroSignature creates a zero signature, used as placeholder in filecoin.
 func CreateZeroSignature() Signature {
-	resp := generated.FilCreateZeroSignature()
-	resp.Deref()
-	resp.Signature.Deref()
-
-	defer generated.FilDestroyZeroSignatureResponse(resp)
-
+	sign := bls.CreateZeroSign()
 	var sig Signature
-	copy(sig[:], resp.Signature.Inner[:])
+	copy(sig[:], sign[:])
 
 	return sig
 }
