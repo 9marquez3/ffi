@@ -2,9 +2,9 @@
 **/include
 **/paramcache
 **/target
-.install-filcrypto
-filcrypto.h
-filcrypto.pc
+.install-ffi
+ffi.h
+ffi.pc
 filecoin.h
 filecoin.pc
 *.a
