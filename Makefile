@@ -1,11 +1,17 @@
-DEPS:=ffi.h ffi.pc libffi.a
+DEPS:=ffi.h ffi.pc libffi.a c_interface.h libcgo.a libzcnt.a
 
 all: $(DEPS)
 .PHONY: all
 
 # Create a file so that parallel make doesn't call `./install-ffi` for
 # each of the deps
-$(DEPS): .install-ffi  ;
+$(DEPS):build/.update-modules .install-ffi .install-vdf;
+
+.install-vdf:
+	cd chiavdf/src && $(MAKE) -f Makefile.vdf-client
+	cp chiavdf/src/libcgo.a .
+	cp chiavdf/src/libzcnt.a .
+	cp chiavdf/src/c_interface.h .
 
 .install-ffi: rust
 	go clean -cache -testcache .
@@ -17,6 +23,7 @@ clean:
 	rm -rf $(DEPS) .install-ffi
 	rm -f ./runner
 	cd rust && cargo clean && cd ..
+	cd chiavdf/src && $(MAKE) -f Makefile.vdf-client clean
 .PHONY: clean
 
 go-lint: $(DEPS)
@@ -40,3 +47,6 @@ runner: $(DEPS)
 	rm -f ./runner
 	go build -o ./runner ./cgoleakdetect/
 .PHONY: runner
+
+build/.update-modules:
+	git submodule update --init --recursive

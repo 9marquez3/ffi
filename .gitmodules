@@ -1,0 +1,4 @@
+[submodule "chiavdf"]
+	path = chiavdf
+	url = https://github.com/cnc-project/chiavdf.git
+	branch = dev_cgo
