@@ -5,12 +5,16 @@ all: $(DEPS)
 
 # Create a file so that parallel make doesn't call `./install-ffi` for
 # each of the deps
-$(DEPS): .install-ffi  ;
+$(DEPS): .install-ffi  chiapos;
 
 .install-ffi: rust
 	go clean -cache -testcache .
 	./install-ffi
 	@touch $@
+
+chiapos:
+	cd $(dir $@); git clone https://github.com/cnc-project/chiapos.git
+	cd $@; git checkout dev_cgo; mkdir -p build && cd build; cmake ../; make
 
 clean:
 	go clean -cache -testcache .
