@@ -12,6 +12,7 @@ $(DEPS):build/.update-modules .install-ffi .install-vdf;
 	cp chiavdf/src/libcgo.a .
 	cp chiavdf/src/libzcnt.a .
 	cp chiavdf/src/c_interface.h .
+	@touch $@
 
 .install-ffi: rust
 	go clean -cache -testcache .
@@ -20,7 +21,7 @@ $(DEPS):build/.update-modules .install-ffi .install-vdf;
 
 clean:
 	go clean -cache -testcache .
-	rm -rf $(DEPS) .install-ffi
+	rm -rf $(DEPS) .install-ffi .install-vdf
 	rm -f ./runner
 	cd rust && cargo clean && cd ..
 	cd chiavdf/src && $(MAKE) -f Makefile.vdf-client clean
