@@ -3,6 +3,7 @@ module github.com/filecoin-project/filecoin-ffi
 go 1.13
 
 require (
+	github.com/cnc-project/cnc-bls v1.0.3 // indirect
 	github.com/filecoin-project/go-address v0.0.5
 	github.com/filecoin-project/go-fil-commcid v0.0.0-20200716160307-8f644712406f
 	github.com/filecoin-project/go-state-types v0.1.1-0.20210506134452-99b279731c48

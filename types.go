@@ -2,10 +2,13 @@ package ffi
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"sort"
 
+	bls "github.com/cnc-project/cnc-bls"
 	"github.com/filecoin-project/go-state-types/abi"
+	big2 "github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/specs-actors/actors/runtime/proof"
 	"github.com/ipfs/go-cid"
 )
@@ -130,4 +133,122 @@ type PrivateSectorInfo struct {
 // AllocationManager is an interface that provides Free() capability.
 type AllocationManager interface {
 	Free()
+}
+
+type BigInt = big2.Int
+
+// vdf and proof
+type ConsensusConstants struct {
+	SlotBlocksTarget               uint64 // How many blocks to target per sub-slot
+	MinBlocksPerChallengeBlock     uint8  // How many blocks must be created per slot (to make challenge sb)
+	MaxSubSlotBlocks               uint64 //
+	NumSpsSubSlot                  uint64 // The number of signage points per sub-slot (including the 0th sp at the sub-slot start)
+	SubSlotItersStarting           uint64
+	DifficultyConstantFactor       BigInt
+	DifficultyStarting             uint64
+	DifficultyChangeMaxFactor      uint64
+	SubEpochBlocks                 uint64
+	EpochBlocks                    uint64
+	SignificantBits                int64
+	DiscriminantSizeBits           int64
+	NumberZeroBitsPlotFilter       int64
+	MinPlotSize                    int64
+	MaxPlotSize                    int64
+	SubSlotTimeTarget              int64
+	NumSpIntervalsExtra            int64
+	MaxFutureTime                  int64
+	NumberOfTimestamps             int64
+	GenesisChallenge               [32]byte
+	AggSigMeAdditionalData         []byte
+	GenesisPreFarmPoolPuzzleHash   [32]byte
+	GenesisPreFarmFarmerPuzzleHash [32]byte
+	MaxVdfWitnessSize              int64
+	MempoolBlockBuffer             int64
+	MaxCoinAmount                  uint64
+	MaxBlockCostClvm               int64
+	CostPerByte                    int64
+	WeightProofThreshold           uint8
+	WeightProofRecentBlocks        uint64
+	MaxBlockCountPerRequests       uint64
+	//	RustConditionChecker           uint64
+	BlocksCacheSize         uint64
+	NetworkType             int64
+	MaxGeneratorSize        uint64
+	MaxGeneratorRefListSize uint64
+	PoolSubSlotIters        uint64
+}
+
+// ClassGroupElement
+type ClassGroupElement struct {
+	Data [100]byte
+}
+
+func (c ClassGroupElement) FromBytes(d []byte) ClassGroupElement {
+	var data ClassGroupElement
+	copy(data.Data[:], d)
+	return data
+}
+
+func (c ClassGroupElement) GetDefaultElement() ClassGroupElement {
+	return c.FromBytes([]byte{0x08})
+}
+
+func (c ClassGroupElement) GetSize() int {
+	return 100
+}
+
+// VDFInfo
+type VDFInfo struct {
+	// challenge: bytes32  # Used to generate the discriminant (VDF group)
+	Challenge [32]byte
+	// number_of_iterations: uint64
+	NumberOfIterations uint64
+	// output: ClassgroupElement {data: bytes100}
+	Output ClassGroupElement
+}
+
+// VDFProof
+type VDFProof struct {
+	// witnessType: uint8
+	WitnessType uint8
+	// witness: bytes
+	Witness []byte
+	// normalizedToIdentity: bool
+	NormalizedToIdentity bool
+}
+
+type HashData struct {
+	Data bls.HashDigest256
+}
+
+func (h *HashData) GetHashDate() bls.HashDigest256 {
+	return h.Data
+}
+
+func (h *HashData) IsZero() bool {
+	return h.Data.IsZero()
+}
+
+func (h *HashData) Bytes() []byte {
+	return h.Data.Bytes()
+}
+
+func hexString32(s string) [32]byte {
+	if len(s) != 64 {
+		panic("len s != 64")
+	}
+	bytes, _ := hex.DecodeString(s)
+	a := [32]byte{}
+	copy(a[:], bytes)
+	return a
+}
+
+func hexString(s string) []byte {
+	if len(s) != 64 {
+		panic("len s != 64")
+	}
+	bytes, _ := hex.DecodeString(s)
+	a := make([]byte, 32)
+	copy(a, bytes)
+	return a
 }
